@@ -1,0 +1,29 @@
+"_78xx_12_1_CTL_erase":
+  - Key:Applications
+  - Key:KeyPad5
+  - Key:KeyPad4
+  - Key:KeyPad4
+  - Key:Soft2
+"_78xx_12_1_reset_all":
+  - Key:Applications
+  - Key:KeyPad5
+  - Key:KeyPad4
+  - Key:KeyPad1
+  - Key:Soft2
+"_79xx_CTL_erase":
+  -Init:Settings
+  -Key:Settings
+  -Key:KeyPad4
+  -Key:KeyPad5
+  -Key:KeyPad2
+  -Key:KeyPadStar
+  -Key:KeyPadStar
+  -Key:KeyPadPound
+  -Key:Soft4
+  -Key:Soft2
+"_88xx_CTL_erase":
+  -Key:Applications
+  -Key:KeyPad5
+  -Key:KeyPad4
+  -Key:KeyPad4
+  -Key:Soft3
