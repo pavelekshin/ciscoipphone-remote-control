@@ -1,10 +1,24 @@
 # Desciption:
-This app used for remotly delete ITL certificate and restart the Cisco IP Phones sending to them keypress execution command (CiscoIPPhoneExecute)
+This app used for remotly delete ITL certificates and restarts the Cisco IP Phones sending to them keypress execution command (CiscoIPPhoneExecute) For concurrency used asyncio. The results is writing to SQLite/PostgreSQL database.
 
-phones.csv - contains list of ip address 
-templates/keypress_templates.yaml - the templates with keypress
-settings.py - global settings
+[Cisco IP Phone Programmobility Guide](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cuipph/all_models/xsi/9-1-1/CUIP_BK_P82B3B16_00_phones-services-application-development-notes.html)
 
+phones.csv - contains list of ip address <br>
+templates/keypress_templates.yaml - the templates with keypress <br>
+settings.py - global settings <br>
 
 > [!NOTE]
-Supported URIs by Phone Model. Detailed on [Cisco](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cuipph/all_models/xsi/9-1-1/CUIP_BK_P82B3B16_00_phones-services-application-development-notes/CUIP_BK_P82B3B16_00_phones-services-application-development-notes_chapter_0101.html#CUIP_RF_S66EDF62_00)
+> for authentication on phone you need to create app user on CUCM cluster with AXL role and associate them with phones.
+
+> [!NOTE]
+> # IP Phone Information Access:
+> Cisco Unified IP Phones have an embedded web server to provide a programming interface for external applications, and a debugging and management interface for system administrators.
+> You can access the administrative pages using a standard web browser and pointing to the IP address of the phone with: http://<phoneIP>/, where phoneIP is the IP address of the specific phone.
+> These device information pages are available in either HTML format for manual debugging purposes, or in XML format for automation purposes. The following table lists the available URLs and their purpose.
+> 
+> | URL | Description | 
+> | --- | --- |
+> http://ip/CGI/Execute (password-protected CGI script)| The target URL of a phone push (HTTP POST) request.
+
+> [!NOTE]
+> Supported URIs by Phone Model. Detailed on [Cisco](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cuipph/all_models/xsi/9-1-1/CUIP_BK_P82B3B16_00_phones-services-application-development-notes/CUIP_BK_P82B3B16_00_phones-services-application-development-notes_chapter_0101.html#CUIP_RF_S66EDF62_00)
