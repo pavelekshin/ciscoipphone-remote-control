@@ -13,12 +13,12 @@ settings.py - global settings <br>
 > [!NOTE]
 > # IP Phone Information Access:
 > Cisco Unified IP Phones have an embedded web server to provide a programming interface for external applications, and a debugging and management interface for system administrators.
-> You can access the administrative pages using a standard web browser and pointing to the IP address of the phone with: http://<phoneIP>/, where phoneIP is the IP address of the specific phone.
+> You can access the administrative pages using a standard web browser and pointing to the IP address of the phone with: http://phoneIP/, where phoneIP is the IP address of the specific phone.
 > These device information pages are available in either HTML format for manual debugging purposes, or in XML format for automation purposes. The following table lists the available URLs and their purpose.
 > 
 > | URL | Description | 
 > | --- | --- |
-> http://ip/CGI/Execute (password-protected CGI script)| The target URL of a phone push (HTTP POST) request.
+> /CGI/Execute (password-protected CGI script)| The target URL of a phone push (HTTP POST) request.
 
 > [!NOTE]
 > Supported URIs by Phone Model. Detailed on [Cisco](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cuipph/all_models/xsi/9-1-1/CUIP_BK_P82B3B16_00_phones-services-application-development-notes/CUIP_BK_P82B3B16_00_phones-services-application-development-notes_chapter_0101.html#CUIP_RF_S66EDF62_00)
