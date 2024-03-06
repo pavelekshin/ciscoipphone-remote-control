@@ -8,8 +8,8 @@ phones.csv - contains list of ip address <br>
 templates/keypress_templates.yaml - the templates with keypress <br>
 settings.py - global settings <br>
 
-> [!NOTE]
-> for authentication on phone you need to create app user on CUCM cluster with AXL role and associate them with phones.
+# Requrements:
+for authentication on Cisco IP Phone you need to create app user on CUCM with AXL role and associate them with phones.
 
 > [!NOTE]
 > # IP Phone Information Access:
