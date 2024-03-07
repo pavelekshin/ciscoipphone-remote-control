@@ -50,8 +50,8 @@ def get_session() -> Session:
 async def async_global_init():
     global __async_factory
 
-    full_file = db_folder.get_db_path('phonedb.sqlite')   # sqlite3
-    url = 'sqlite+aiosqlite:///' + full_file          # sqlite3
+    full_file = db_folder.get_db_path('phonedb.sqlite')  # sqlite3
+    url = 'sqlite+aiosqlite:///' + full_file  # sqlite3
     engine = create_async_engine(url, echo=False, )  # sqlite3
 
     # url = "postgresql+asyncpg://postgres:postgres@localhost:5432/phonecontrol"  # postgresql

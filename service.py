@@ -144,7 +144,7 @@ async def async_action_on_tasks(done: Future[Awaitable, Iterable]):
                 await async_update_phones(ip=task["ip"], status=StatusEnum.ERROR,
                                           error=f"Response {task['response']}", )
         else:
-            reg = re.search(r"(\d+.\d+.\d+.\d+)", str(task.exception()))
+            reg = re.search(settings.IP_PATTERN, str(task.exception()))
             if reg:
                 await async_update_phones(ip=str(reg.group()), status=StatusEnum.ERROR,
                                           error=str(task.exception()), )
