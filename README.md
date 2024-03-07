@@ -13,7 +13,7 @@ On CUCM cluster activate Cisco CTIManager services, it's required for remote con
 For remote control you need to create End User on CUCM with Standard CTI Enabled role and associate them with IP phones.
 
 > [!NOTE]
-**> IP Phone Information Access:**<br>
+**IP Phone Information Access:**<br>
 > Cisco Unified IP Phones have an embedded web server to provide a programming interface for external applications, and a debugging and management interface for system administrators.
 > You can access the administrative pages using a standard web browser and pointing to the IP address of the phone with: http://phoneIP/, where phoneIP is the IP address of the specific phone.
 > These device information pages are available in either HTML format for manual debugging purposes, or in XML format for automation purposes. The following table lists the available URLs and their purpose.
