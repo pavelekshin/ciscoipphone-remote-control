@@ -9,7 +9,7 @@ templates/keypress_templates.yaml - phone templates with keypress <br>
 settings.py - global settings <br>
 
 # Requrements:
-for authentication on Cisco IP Phone you need to create End User on CUCM with Standard CTI Enabled role and associate them with phones.
+for authentication on Cisco IP Phone and remote control you need to create End User on CUCM with Standard CTI Enabled role and associate them with phones.
 
 > [!NOTE]
 > # IP Phone Information Access:
