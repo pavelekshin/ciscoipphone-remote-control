@@ -103,7 +103,7 @@ async def send_keypress(session: ClientSession, ip: str, keynavi_config: List[st
     responses = []
 
     for xml in keynavi_config:
-        async with session.post(url, auth=BasicAuth(settings.AXL_USER, settings.AXL_USER), headers=headers,
+        async with session.post(url, auth=BasicAuth(settings.USER, settings.USER_PWD), headers=headers,
                                 data={"XML": xml}) as resp:
             responses.append(resp.status)
         await asyncio.sleep(settings.PAUSE)
