@@ -1,11 +1,11 @@
 # Cisco IP Phone remote control
 # Desciption:
-This app used for remotly delete ITL certificates and restarts the Cisco IP Phones sending to them keypress execution command (CiscoIPPhoneExecute) For concurrency used asyncio. The results is writing to SQLite/PostgreSQL database.
+This app used for remotly delete ITL certificates and restarts the Cisco IP Phones sending to them keypress execution command (CiscoIPPhoneExecute). For concurrency used asyncio. The results is writing to SQLite/PostgreSQL database.
 
 [Cisco IP Phone Programmobility Guide](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cuipph/all_models/xsi/9-1-1/CUIP_BK_P82B3B16_00_phones-services-application-development-notes.html)
 
-phones.csv - contains list of ip address <br>
-templates/keypress_templates.yaml - the templates with keypress <br>
+phones.csv - list of phones ip address <br>
+templates/keypress_templates.yaml - phone templates with keypress <br>
 settings.py - global settings <br>
 
 # Requrements:
