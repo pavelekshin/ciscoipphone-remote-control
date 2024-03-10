@@ -12,6 +12,9 @@ settings.py - global settings <br>
 On CUCM cluster activate Cisco CTIManager services, it's required for remote control.
 For remote control you need to create End User on CUCM with Standard CTI Enabled role and associate them with IP phones.
 
+# Run PostgreSQL in Docker:
+`docker run --name db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16-alpine3.19
+`
 > [!NOTE]
 **IP Phone Information Access:**<br>
 > Cisco Unified IP Phones have an embedded web server to provide a programming interface for external applications, and a debugging and management interface for system administrators.
