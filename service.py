@@ -4,7 +4,6 @@ import yaml
 import csv
 import asyncio
 import datetime
-import re
 
 from lxml import etree
 from typing import List, Optional, Awaitable, Iterable, Dict
@@ -14,7 +13,7 @@ from aiohttp import ClientSession, BasicAuth, ClientTimeout
 from models.phone import Phone, StatusEnum
 from utils import async_timed
 from data import session_factory
-import settings
+from settings import USER, USER_PWD, PAUSE
 
 
 def create_tempalte(template):
@@ -103,10 +102,10 @@ async def send_keypress(session: ClientSession, ip: str, keynavi_config: List[st
     responses = []
 
     for xml in keynavi_config:
-        async with session.post(url, auth=BasicAuth(settings.USER, settings.USER_PWD), headers=headers,
+        async with session.post(url, auth=BasicAuth(USER, USER_PWD), headers=headers,
                                 data={"XML": xml}) as resp:
             responses.append(resp.status)
-        await asyncio.sleep(settings.PAUSE)
+        await asyncio.sleep(PAUSE)
     return {
         "ip": ip,
         "response": 200 if all(i <= 400 for i in responses) else responses[-1],
@@ -118,7 +117,7 @@ async def create_async_client_session(phones: List[str], keynavi_config: List[st
 
     session_timeout = ClientTimeout(sock_read=3, sock_connect=3, connect=3)
     async with ClientSession(timeout=session_timeout) as session:
-        pending = [asyncio.create_task(send_keypress(session, ip, keynavi_config)) for ip in phones]
+        pending = [asyncio.create_task(send_keypress(session, ip, keynavi_config), name=f"Task-{ip}") for ip in phones]
 
         total = len(pending)
         complete = 0
@@ -135,19 +134,21 @@ async def create_async_client_session(phones: List[str], keynavi_config: List[st
 
 async def async_action_on_tasks(done: Future[Awaitable, Iterable]):
     for task in done:
-        if task.exception() is None:
-            task = task.result()
-            if task["response"] <= 400:
-                await async_update_phones(ip=task["ip"], status=StatusEnum.SUCCESS,
-                                          error=f"Response {task['response']}", )
+        try:
+            ip_addr = task.get_name().removeprefix("Task-")
+            if task.exception() is None:
+                task_result = task.result()
+                if task_result["response"] <= 400:
+                    await async_update_phones(ip=ip_addr, status=StatusEnum.SUCCESS,
+                                              error=f"Response {task_result['response']}", )
+                else:
+                    await async_update_phones(ip=ip_addr, status=StatusEnum.ERROR,
+                                              error=f"Response {task_result['response']}", )
             else:
-                await async_update_phones(ip=task["ip"], status=StatusEnum.ERROR,
-                                          error=f"Response {task['response']}", )
-        else:
-            reg = re.search(settings.IP_PATTERN, str(task.exception()))
-            if reg:
-                await async_update_phones(ip=str(reg.group()), status=StatusEnum.ERROR,
+                await async_update_phones(ip=ip_addr, status=StatusEnum.ERROR,
                                           error=str(task.exception()), )
+        except Exception:
+            print(f"Task: {task.get_name()}, threw {task.exception}")
 
 
 async def async_update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
