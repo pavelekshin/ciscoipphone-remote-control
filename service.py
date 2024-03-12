@@ -135,7 +135,7 @@ async def create_async_client_session(phones: List[str], keynavi_config: List[st
 async def async_action_on_tasks(done: Future[Awaitable, Iterable]):
     for task in done:
         try:
-            ip_addr = task.get_name().removeprefix("Task-")
+            ip_addr = task.get_name().removeprefix("Task-")  # substring ip address from task name
             if task.exception() is None:
                 task_result = task.result()
                 if task_result["response"] <= 400:
