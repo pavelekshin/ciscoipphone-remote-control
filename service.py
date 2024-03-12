@@ -127,7 +127,7 @@ async def create_async_client_session(phones: List[str], keynavi_config: List[st
 
             complete += len(done)
 
-            print(f"Total tasks complete: {complete}/{total}")
+            print(f"Tasks complete: {complete}/{total}")
             print(f"Pending tasks: {len(pending)}")
             await async_action_on_tasks(done)
 
