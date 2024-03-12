@@ -17,6 +17,11 @@ from settings import USER, USER_PWD, PAUSE
 
 
 def create_tempalte(template):
+    """
+    create list of keypress for selected phone template.
+    return list of keypress command
+    """
+
     keynavi = []
 
     for keypress in template:
@@ -30,6 +35,11 @@ def create_tempalte(template):
 
 
 def load_yaml_config(path: str) -> Dict[str, str]:
+    """
+    load phone YAML keypress file and convert it to dict.
+    return dict with templates
+    """
+
     with open(path, "r") as f:
         try:
             yaml_dict = yaml.safe_load(f)
