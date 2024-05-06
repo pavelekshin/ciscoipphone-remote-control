@@ -5,13 +5,20 @@ import service
 
 
 async def run():
+    try:
+        clear = input("\nClear destination phones table before insert?\nPress [Y] or any: ")
+        if clear.lower() == "y":
+            await service.clear_table()
+    except ValueError:
+        print("Ooops, wrong choice!")
+        exit()
+
     cnt = 0
     for phone in service.read_phones("phones.csv"):
         cnt += await service.insert_phones(phone)
 
     print()
     print(f"Phones inserted: {cnt}\n")
-    print()
 
     config_dict = service.load_yaml_config("templates/keypress_templates.yaml")
 
@@ -27,7 +34,8 @@ async def run():
 
     print("Starting with " + template)
 
-    keynavi_config = service.create_template(config_dict[template])
+    command = config_dict[template]
+    keynavi_config = service.create_template(command)
 
     start = time.time()
     phones = await service.get_phones()  # get all new and not successful phone result
@@ -42,4 +50,7 @@ async def run():
 
 
 if __name__ == "__main__":
-    asyncio.run(run(), debug=True)
+    try:
+        asyncio.run(run(), debug=False)
+    except KeyboardInterrupt:
+        print("\nProgram is canceled by user")

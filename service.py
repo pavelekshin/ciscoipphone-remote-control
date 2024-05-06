@@ -1,6 +1,7 @@
 from asyncio import Future
 from operator import or_, and_
 
+import progressbar
 import yaml
 import csv
 import asyncio
@@ -8,15 +9,14 @@ import datetime
 import ipaddress
 
 from lxml import etree
-from typing import List, Optional, Awaitable, Iterable, Dict
-from sqlalchemy import Update, Select
+from typing import List, Optional, Awaitable, Iterable, Dict, Any
+from sqlalchemy import Update, Select, Executable, Delete
 from aiohttp import ClientSession, BasicAuth, ClientTimeout
 
 from models.phone import Phone, StatusEnum
 from data import session_factory
 from settings import USER, USER_PWD, PAUSE, CHUNK_SIZE
 from more_itertools import chunked
-import progressbar
 
 
 def create_template(template: List[str]):
@@ -130,37 +130,22 @@ async def get_phone_after_complete(phones: List[str]) -> Dict[str, List[str | No
     :return:  dict with SUCCESS and ERROR phones list
     """
     result = {}
-    result["Success"] = await _get_successfully_phone_results(phones)
-    result["Error"] = await _get_unsuccessfully_phone_results(phones)
+    stmt = Select(Phone.ip_address).filter(and_(Phone.status == "SUCCESS", Phone.ip_address.in_(phones)))
+    result["Success"] = await _get_phone(stmt)
+    stmt = Select(Phone.ip_address).filter(and_(Phone.status != "SUCCESS", Phone.ip_address.in_(phones)))
+    result["Error"] = await _get_phone(stmt)
     result["Devices"] = len(result["Success"] + result["Error"])
 
     return result
 
 
-async def _get_successfully_phone_results(phones: List[str]):
-    async with session_factory.async_get_session() as session, session.begin():
-        res = await session.execute(
-            Select(Phone.ip_address).
-            filter(
-                and_(Phone.status == "SUCCESS", Phone.ip_address.in_(phones))
-            )
-        )
-    return res.scalars().all()
+async def _get_phone(stmt: Executable) -> List[str]:
+    async with session_factory.async_get_session() as session:
+        result = await session.execute(stmt)
+    return result.scalars().all()
 
 
-async def _get_unsuccessfully_phone_results(phones: List[str]):
-    async with session_factory.async_get_session() as session, session.begin():
-        res = await session.execute(
-            Select(Phone.ip_address).
-            filter(
-                and_(Phone.status != "SUCCESS", Phone.ip_address.in_(phones))
-            )
-        )
-    return res.scalars().all()
-
-
-async def send_keypress(session: ClientSession, ip: str, keynavi_config: List[str]) -> Dict[
-    str, str | int]:
+async def send_keypress(session: ClientSession, ip: str, keynavi_config: List[str]) -> Dict[str, Any]:
     """
     Send keypress to phone
     :param session: asyncio.ClientSession
@@ -200,20 +185,20 @@ async def create_async_client_session(phones: List[str], keynavi_config: List[st
 
         total = len(phones)
 
-        for id, chunk in enumerate(chunked(phones, CHUNK_SIZE), start=1):
+        for number, chunk in enumerate(chunked(phones, CHUNK_SIZE), start=1):
             pending = [asyncio.create_task(send_keypress(session, ip, keynavi_config), name=f"Task-{ip}") for ip in
                        chunk]
-            print(f"Chunk: {id}, contains ip address: {chunk}")
+            print(f"Chunk: {number}, contains ip address: {chunk}")
             with progressbar.ProgressBar(max_value=len(chunk), term_width=120, max_error=False) as bar:
                 complete = 0
                 while pending:
                     done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
                     complete += len(done)
                     bar.update(complete)
-                    await asyncio.create_task(async_action_on_tasks(done))
+                    await asyncio.create_task(tasks_action(done))
 
 
-async def async_action_on_tasks(done: Future[Awaitable, Iterable]):
+async def tasks_action(done: Future[Awaitable, Iterable]):
     """
     Get complete task and run according DB query
     :param done:  Future[Awaitable, Iterable]
@@ -223,17 +208,17 @@ async def async_action_on_tasks(done: Future[Awaitable, Iterable]):
         if task.exception() is None:
             task_result = task.result()
             if task_result["response"] <= 400:  # If response code below 400, we mark this result as SUCCESS
-                await async_update_phones(ip=ip_addr, status=StatusEnum.SUCCESS,
-                                          error=f"Response {task_result['response']}", )
+                await update_phones(ip=ip_addr, status=StatusEnum.SUCCESS,
+                                    error=f"Response {task_result['response']}", )
             else:  # Mark other response code as ERROR
-                await async_update_phones(ip=ip_addr, status=StatusEnum.ERROR,
-                                          error=f"Response {task_result['response']}", )
+                await update_phones(ip=ip_addr, status=StatusEnum.ERROR,
+                                    error=f"Response {task_result['response']}", )
         else:  # If task complete with exception we mark this result as ERROR and write ERROR message in DB
-            await async_update_phones(ip=ip_addr, status=StatusEnum.ERROR,
-                                      error=str(task.exception()), )
+            await update_phones(ip=ip_addr, status=StatusEnum.ERROR,
+                                error=str(task.exception()), )
 
 
-async def async_update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
+async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
     """
     Update phone status in DB
     :param ip:  phone ip
@@ -242,10 +227,17 @@ async def async_update_phones(ip: str, status: StatusEnum, error: str = None) ->
     :return:  return count of updated rows
     """
     async with session_factory.async_get_session() as session, session.begin():
-        update = await session.execute(Update(Phone).filter(Phone.ip_address == ip). \
-            values(
-            status=status,
-            updated=datetime.datetime.now(),
-            error=error
-        ))
+        update = await session.execute(
+            Update(Phone)
+            .filter(Phone.ip_address == ip)
+            .values(
+                status=status,
+                updated=datetime.datetime.now(),
+                error=error
+            ))
     return update.rowcount
+
+
+async def clear_table():
+    async with session_factory.async_get_session() as session, session.begin():
+        await session.execute(Delete(Phone))

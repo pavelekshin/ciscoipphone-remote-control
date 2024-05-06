@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from settings import cfg
 from models.model_base import ModelBase
 
-__async_factory = None
+__factory = None
 
 
 async def db_init():
-    global __async_factory
+    global __factory
 
     engine = async_engine_from_config(cfg.config, )
 
@@ -19,19 +19,19 @@ async def db_init():
         print(f"Oops: {ex}")
         exit()
     else:
-        print(f"Successfully connected to DB :{engine.url}")
+        print(f"\nSuccessfully connected to DB: {engine.url}")
 
-    __async_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    __factory = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 
 @asynccontextmanager
 async def async_get_session() -> AsyncSession:
-    global __async_factory
+    global __factory
 
-    if __async_factory is None:
+    if __factory is None:
         await db_init()
 
-    async_session = __async_factory()
+    async_session = __factory()
 
     try:
         yield async_session
