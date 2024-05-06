@@ -7,4 +7,3 @@ CHUNK_SIZE: int = 20  # Chunk size which split phones list (use for more control
 
 # default postgresql docker settings
 cfg = PostgresSQL(host="localhost", dbname="postgres", username="postgres", password="postgres")
-
