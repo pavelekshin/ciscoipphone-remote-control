@@ -27,9 +27,9 @@ class Config:
 
     @property
     def sa_database_uri(self):
-        if self.__class__.__name__ == "SQLite":
+        if self.__class__ is SQLite:
             return f"sqlite+aiosqlite:///{get_db_path(self.DB_NAME)}"
-        elif self.__class__.__name__ == "PostgresSQL":
+        elif self.__class__ is PostgresSQL:
             return (f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
                     f"@{self.DB_SERVER}:{self.PORT}/{self.DB_NAME}")
         else:

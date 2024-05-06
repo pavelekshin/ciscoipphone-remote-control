@@ -10,7 +10,7 @@ async def run():
         if clear.lower() == "y":
             await service.clear_table()
     except ValueError:
-        print("Ooops, wrong choice!")
+        print("Oops, wrong choice!")
         exit()
 
     cnt = 0
@@ -29,13 +29,13 @@ async def run():
         template_id = int(input("\nChoice template: "))
         template = list(config_dict.keys())[template_id - 1]
     except ValueError:
-        print("Ooops, wrong choice!")
+        print("Oops, wrong choice!")
         exit()
 
     print("Starting with " + template)
 
-    command = config_dict[template]
-    keynavi_config = service.create_template(command)
+    commands = config_dict[template]
+    keynavi_config = service.create_template(commands)
 
     start = time.time()
     phones = await service.get_phones()  # get all new and not successful phone result
