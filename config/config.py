@@ -26,36 +26,34 @@ class Config:
             self.DB_PASSWORD = password
 
     @property
-    def sa_database_uri(self):
+    def sa_database_uri(self) -> str:
         if self.__class__ is SQLite:
             return f"sqlite+aiosqlite:///{get_db_path(self.DB_NAME)}"
         elif self.__class__ is PostgresSQL:
-            return (f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
-                    f"@{self.DB_SERVER}:{self.PORT}/{self.DB_NAME}")
+            return (f"postgresql+asyncpg://"
+                    f"{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_SERVER}:{self.PORT}/{self.DB_NAME}")
         else:
             raise NotImplementedError("This DB not implemented!")
 
     @property
-    def sa_engine_options(self):
+    def sa_engine_options(self) -> dict[str, Any]:
         return self.ENGINE_OPTIONS
 
     @property
-    def sa_echo(self):
+    def sa_echo(self) -> bool:
         return self.ECHO
 
-    def _db_filename(self):
+    def _db_filename(self) -> str:
         return get_db_path(self.DB_NAME)
 
     @property
-    def config(self):
+    def config(self) -> dict[str, Any]:
         cfg = {
             "sqlalchemy.url": self.sa_database_uri,
             "sqlalchemy.echo": self.sa_echo
         }
-
         for k, v in self.sa_engine_options.items():
             cfg[f"sqlalchemy.{k}"] = v
-
         return cfg
 
 
