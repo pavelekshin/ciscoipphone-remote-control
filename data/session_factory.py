@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from settings import cfg
 from models.model_base import ModelBase
 
-__factory = None
+__factory: AsyncSession = None
 
 
 async def db_init():

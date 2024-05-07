@@ -67,7 +67,7 @@ class PostgresSQL(Config):
     DB_NAME: str = "postgres"
     PORT: int = 5432
     ECHO: bool = False
-    ENGINE_OPTIONS = {
+    ENGINE_OPTIONS: dict[str, Any] = {
         "pool_size": 10,
         "pool_pre_ping": True,
     }
@@ -77,6 +77,6 @@ class SQLite(Config):
     """Uses for SQLite database server."""
     ECHO: bool = False
     DB_NAME: str = "phonedb.sqlite"
-    ENGINE_OPTIONS = {
+    ENGINE_OPTIONS: dict[str, Any] = {
         "pool_pre_ping": True,
     }
