@@ -6,4 +6,9 @@ PAUSE: float = 1.5  # Pause in seconds between sending keypress
 CHUNK_SIZE: int = 20  # Chunk size which split phones list (use for more control)
 
 # default postgresql docker settings
-cfg = PostgresSQL(host="localhost", dbname="postgres", username="postgres", password="postgres")
+cfg = PostgresSQL(
+    host="localhost",
+    dbname="postgres",
+    username="postgres",
+    password="postgres"
+)
