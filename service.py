@@ -1,7 +1,7 @@
 from asyncio import Future, Task
 from operator import or_, and_
 
-import progressbar
+import progressbar as pb
 import yaml
 import csv
 import asyncio
@@ -197,10 +197,13 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
     session_timeout = ClientTimeout(sock_read=3, sock_connect=3, connect=3)
     async with ClientSession(timeout=session_timeout) as session:
         for number, chunk in enumerate(chunked(phones, CHUNK_SIZE), start=1):
-            pending = [asyncio.create_task(send_keypress(session, ip, keynavi_config), name=f"Task-{ip}") for ip in
-                       chunk]
+            pending = [
+                asyncio.create_task(
+                    send_keypress(session, ip, keynavi_config), name=f"Task-{ip}"
+                ) for ip in chunk
+            ]
             print(f"Chunk: {number}, contains ip address: {chunk}")
-            with progressbar.ProgressBar(max_value=len(chunk), term_width=120, max_error=False) as bar:
+            with pb.ProgressBar(max_value=len(chunk), term_width=120, max_error=False) as bar:
                 complete = 0
                 while pending:
                     done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
