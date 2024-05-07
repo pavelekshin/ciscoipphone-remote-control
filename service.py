@@ -94,8 +94,8 @@ async def find_phone(ip_address: str) -> str | None:
     """
     async with session_factory.async_get_session() as session:
         phone = await session.execute(
-            Select(Phone).
-            filter(Phone.ip_address == ip_address)
+            Select(Phone)
+            .filter(Phone.ip_address == ip_address)
         )
     return phone.scalars().first()
 
@@ -173,11 +173,8 @@ async def send_keypress(session: ClientSession, ip: str, keynavi_config: list[st
     responses = []
 
     for xml in keynavi_config:
-        async with session.post(url,
-                                auth=BasicAuth(USER, USER_PWD),
-                                headers=headers,
-                                data={"XML": xml}
-                                ) as resp:
+        async with session.post(
+                url, auth=BasicAuth(USER, USER_PWD), headers=headers, data={"XML": xml}) as resp:
             responses.append(resp.status)
         await asyncio.sleep(PAUSE)
     return {
@@ -200,8 +197,7 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
             pending = [
                 asyncio.create_task(
                     send_keypress(session, ip, keynavi_config), name=f"Task-{ip}"
-                ) for ip in chunk
-            ]
+                ) for ip in chunk]
             print(f"Chunk: {number}, contains ip address: {chunk}")
             with pb.ProgressBar(max_value=len(chunk), term_width=120, max_error=False) as bar:
                 complete = 0
@@ -225,20 +221,17 @@ async def tasks_action(done: Iterable[Task]) -> None:
                 await update_phones(
                     ip=ip_addr,
                     status=StatusEnum.SUCCESS,
-                    error=f"Response {task_result.get('response')}",
-                )
+                    error=f"Response {task_result.get('response')}", )
             else:  # Mark other response code as ERROR
                 await update_phones(
                     ip=ip_addr,
                     status=StatusEnum.ERROR,
-                    error=f"Response {task_result.get('response')}",
-                )
+                    error=f"Response {task_result.get('response')}", )
         else:  # If task complete with exception we mark this result as ERROR and write ERROR message in DB
             await update_phones(
                 ip=ip_addr,
                 status=StatusEnum.ERROR,
-                error=str(task.exception()),
-            )
+                error=str(task.exception()), )
 
 
 async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
@@ -256,8 +249,7 @@ async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
             .values(
                 status=status,
                 updated=datetime.datetime.now(),
-                error=error
-            ))
+                error=error))
     return update.rowcount
 
 
