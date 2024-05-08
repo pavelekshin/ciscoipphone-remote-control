@@ -1,8 +1,9 @@
 import datetime
 import enum
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy import Integer, String, DateTime, Index, Enum
+
+from sqlalchemy import DateTime, Enum, Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+
 # noinspection PyPackageRequirements
 from models.model_base import ModelBase
 
@@ -30,5 +31,7 @@ class Phone(ModelBase):
     updated: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     def __repr__(self) -> str:
-        return f"Phone(id={self.id!r}, ip_address={self.ip_address!r}, status={self.status!r}, error={self.error!r}, \
-                                                                created={self.created!r}, updated={self.updated!r})"
+        return (
+            f"Phone(id={self.id!r}, ip_address={self.ip_address!r}, status={self.status!r}, error={self.error!r}, "
+            f"created={self.created!r}, updated={self.updated!r})"
+        )

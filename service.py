@@ -1,22 +1,21 @@
-from asyncio import Future, Task
-from operator import or_, and_
+import asyncio
+import csv
+import datetime
+import ipaddress
+from asyncio import Task
+from operator import and_, or_
+from typing import Any, Generator, Iterable
 
 import progressbar as pb
 import yaml
-import csv
-import asyncio
-import datetime
-import ipaddress
-
+from aiohttp import BasicAuth, ClientSession, ClientTimeout
 from lxml import etree
-from typing import Optional, Awaitable, Iterable, Any, Generator
-from sqlalchemy import Update, Select, Executable, Delete
-from aiohttp import ClientSession, BasicAuth, ClientTimeout
-
-from models.phone import Phone, StatusEnum
-from data import session_factory
-from settings import USER, USER_PWD, PAUSE, CHUNK_SIZE
 from more_itertools import chunked
+from sqlalchemy import Delete, Select, Update
+
+from data import session_factory
+from models.phone import Phone, StatusEnum
+from settings import CHUNK_SIZE, PAUSE, USER, USER_PWD
 
 
 def create_template(template: list[str]):
@@ -29,10 +28,10 @@ def create_template(template: list[str]):
     keynavi = []
 
     for keypress in template:
-        root = etree.Element('CiscoIPPhoneExecute')
-        child_key_execute = etree.SubElement(root, 'ExecuteItem')
-        child_key_execute.set('Priority', '0')
-        child_key_execute.set('URL', keypress)
+        root = etree.Element("CiscoIPPhoneExecute")
+        child_key_execute = etree.SubElement(root, "ExecuteItem")
+        child_key_execute.set("Priority", "0")
+        child_key_execute.set("URL", keypress)
         xml = etree.tostring(root, pretty_print=True, encoding="unicode")
         keynavi.append(xml)
     return keynavi
@@ -59,10 +58,10 @@ def read_phones(path: str) -> Generator[str, None, None]:
     :param path: path to .csv with phones list
     :return: generator with phone ip address
     """
-    with open(path, 'r', encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
         for row in reader:
-            ip = ''.join(row)
+            ip = "".join(row)
             try:
                 if ipaddress.ip_address(ip):
                     yield ip
@@ -93,11 +92,8 @@ async def find_phone(ip_address: str) -> str | None:
     :return: phone ip address
     """
     async with session_factory.async_get_session() as session:
-        phone = await session.execute(
-            Select(Phone)
-            .filter(Phone.ip_address == ip_address)
-        )
-    return phone.scalars().first()
+        res = await session.execute(Select(Phone).filter(Phone.ip_address == ip_address))
+    return res.scalars().first()
 
 
 async def create_phone(ip_address: str) -> None:
@@ -118,45 +114,37 @@ async def get_phones() -> list[str]:
     """
     filters = [Phone.status != "SUCCESS", Phone.status.is_(None)]
     async with session_factory.async_get_session() as session, session.begin():
-        phones = await session.execute(
-            Select(Phone.ip_address).filter(or_(*filters)))
-    return phones.scalars().all()
+        res = await session.execute(Select(Phone.ip_address).filter(or_(*filters)))
+    return res.scalars().all()
 
 
-async def get_phone_after_complete(phones: list[str]) -> dict[str, list[str] | int] | None:
+async def get_phone_after_complete(
+    phones: list[str],
+) -> dict[str, list[str] | int] | None:
     """
     Get results from DB
     :param phones: get initial phones list for this session
     :return:  dict with SUCCESS and ERROR phones list
     """
 
-    result = {}
+    res = {}
 
-    result["Success"] = await _get_phones(
-        Select(Phone.ip_address)
-        .filter(
-            and_(
-                Phone.status == "SUCCESS", Phone.ip_address.in_(phones))
-        )
+    res["Success"] = await _get_phones(
+        Select(Phone.ip_address).filter(and_(Phone.status == "SUCCESS", Phone.ip_address.in_(phones)))
     )
 
-    result["Error"] = await _get_phones(
-        Select(Phone.ip_address)
-        .filter(
-            and_(
-                Phone.status != "SUCCESS", Phone.ip_address.in_(phones)
-            )
-        )
+    res["Error"] = await _get_phones(
+        Select(Phone.ip_address).filter(and_(Phone.status != "SUCCESS", Phone.ip_address.in_(phones)))
     )
 
-    result["Devices"] = len(result["Success"] + result["Error"])
-    return result
+    res["Devices"] = len(res["Success"] + res["Error"])
+    return res
 
 
-async def _get_phones(stmt: Select[tuple[Any, ...]]) -> list[str]:
+async def _get_phones(select_query: Select[tuple[Any, ...]]) -> list[str]:
     async with session_factory.async_get_session() as session:
-        result = await session.execute(stmt)
-    return result.scalars().all()
+        res = await session.execute(select_query)
+    return res.scalars().all()
 
 
 async def send_keypress(session: ClientSession, ip: str, keynavi_config: list[str]) -> dict[str, Any]:
@@ -168,13 +156,12 @@ async def send_keypress(session: ClientSession, ip: str, keynavi_config: list[st
     :return: dict with ip address and response code
     """
     url = f"http://{ip}/CGI/Execute"
-    headers = {'Content-Type': 'text/xml;charset=utf-8'}  # application/xml
+    headers = {"Content-Type": "text/xml;charset=utf-8"}  # application/xml
 
     responses = []
 
     for xml in keynavi_config:
-        async with session.post(
-                url, auth=BasicAuth(USER, USER_PWD), headers=headers, data={"XML": xml}) as resp:
+        async with session.post(url, auth=BasicAuth(USER, USER_PWD), headers=headers, data={"XML": xml}) as resp:
             responses.append(resp.status)
         await asyncio.sleep(PAUSE)
     return {
@@ -195,9 +182,8 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
     async with ClientSession(timeout=session_timeout) as session:
         for number, chunk in enumerate(chunked(phones, CHUNK_SIZE), start=1):
             pending = [
-                asyncio.create_task(
-                    send_keypress(session, ip, keynavi_config), name=f"Task-{ip}"
-                ) for ip in chunk]
+                asyncio.create_task(send_keypress(session, ip, keynavi_config), name=f"Task-{ip}") for ip in chunk
+            ]
             print(f"Chunk: {number}, contains ip address: {chunk}")
             with pb.ProgressBar(max_value=len(chunk), term_width=120, max_error=False) as bar:
                 complete = 0
@@ -221,17 +207,20 @@ async def tasks_action(done: Iterable[Task]) -> None:
                 await update_phones(
                     ip=ip_addr,
                     status=StatusEnum.SUCCESS,
-                    error=f"Response {task_result.get('response')}", )
+                    error=f"Response {task_result.get('response')}",
+                )
             else:  # Mark other response code as ERROR
                 await update_phones(
                     ip=ip_addr,
                     status=StatusEnum.ERROR,
-                    error=f"Response {task_result.get('response')}", )
+                    error=f"Response {task_result.get('response')}",
+                )
         else:  # If task complete with exception we mark this result as ERROR and write ERROR message in DB
             await update_phones(
                 ip=ip_addr,
                 status=StatusEnum.ERROR,
-                error=str(task.exception()), )
+                error=str(task.exception()),
+            )
 
 
 async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
@@ -243,16 +232,15 @@ async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
     :return:  return count of updated rows
     """
     async with session_factory.async_get_session() as session, session.begin():
-        update = await session.execute(
+        res = await session.execute(
             Update(Phone)
             .filter(Phone.ip_address == ip)
-            .values(
-                status=status,
-                updated=datetime.datetime.now(),
-                error=error))
-    return update.rowcount
+            .values(status=status, updated=datetime.datetime.now(), error=error)
+        )
+    return res.rowcount
 
 
-async def clear_table() -> None:
+async def clear_table() -> int:
     async with session_factory.async_get_session() as session, session.begin():
-        await session.execute(Delete(Phone))
+        res = await session.execute(Delete(Phone))
+    return res.rowcount

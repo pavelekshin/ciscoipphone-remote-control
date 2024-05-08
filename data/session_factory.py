@@ -1,8 +1,14 @@
-from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from contextlib import asynccontextmanager
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, async_engine_from_config
-from settings import cfg
+
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_engine_from_config,
+    async_sessionmaker,
+)
+
 from models.model_base import ModelBase
+from settings import cfg
 
 __factory: AsyncSession = None
 
@@ -10,7 +16,9 @@ __factory: AsyncSession = None
 async def db_init():
     global __factory
 
-    engine = async_engine_from_config(cfg.config, )
+    engine = async_engine_from_config(
+        cfg.config,
+    )
 
     try:
         async with engine.begin() as conn:

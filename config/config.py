@@ -5,6 +5,7 @@ from db.db_folder import get_db_path
 
 class Config:
     """Base config, uses staging SQLAlchemy Engine."""
+
     __test__ = False
 
     ECHO: bool = False
@@ -30,8 +31,10 @@ class Config:
         if self.__class__ is SQLite:
             return f"sqlite+aiosqlite:///{get_db_path(self.DB_NAME)}"
         elif self.__class__ is PostgresSQL:
-            return (f"postgresql+asyncpg://"
-                    f"{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_SERVER}:{self.PORT}/{self.DB_NAME}")
+            return (
+                f"postgresql+asyncpg://"
+                f"{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_SERVER}:{self.PORT}/{self.DB_NAME}"
+            )
         else:
             raise NotImplementedError("This DB not implemented!")
 
@@ -48,10 +51,7 @@ class Config:
 
     @property
     def config(self) -> dict[str, Any]:
-        cfg = {
-            "sqlalchemy.url": self.sa_database_uri,
-            "sqlalchemy.echo": self.sa_echo
-        }
+        cfg = {"sqlalchemy.url": self.sa_database_uri, "sqlalchemy.echo": self.sa_echo}
         for k, v in self.sa_engine_options.items():
             cfg[f"sqlalchemy.{k}"] = v
         return cfg
@@ -59,6 +59,7 @@ class Config:
 
 class PostgresSQL(Config):
     """Uses for PostgresSQL database server."""
+
     DB_SERVER: str = "localhost"
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "postgres"
@@ -73,6 +74,7 @@ class PostgresSQL(Config):
 
 class SQLite(Config):
     """Uses for SQLite database server."""
+
     ECHO: bool = False
     DB_NAME: str = "phonedb.sqlite"
     ENGINE_OPTIONS: dict[str, Any] = {

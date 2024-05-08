@@ -2,7 +2,7 @@ import functools
 import time
 
 
-def async_timed():
+def timed():
     def wrapper(func):
         @functools.wraps(func)
         async def wrapped(*args, **kwargs):
