@@ -20,7 +20,7 @@ from settings import CHUNK_SIZE, PAUSE, USER, USER_PWD
 
 def create_template(template: list[str]):
     """
-    Create list of keypress for selected phone template.
+    Create list of keypress for selected phone template
     :param template: List with keypress command
     :return: list with xml keypress command
     """
@@ -119,7 +119,7 @@ async def get_phones() -> list[str]:
 
 
 async def get_phone_after_complete(
-    phones: list[str],
+        phones: list[str],
 ) -> dict[str, list[str] | int] | None:
     """
     Get results from DB
