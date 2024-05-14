@@ -14,7 +14,7 @@ from more_itertools import chunked
 from sqlalchemy import Delete, Select, Update
 
 from data import session_factory
-from models.phone import Phone, StatusEnum
+from models.model import Phone, StatusEnum
 from settings import CHUNK_SIZE, PAUSE, USER, USER_PWD
 
 
@@ -92,8 +92,8 @@ async def find_phone(ip_address: str) -> str | None:
     :return: phone ip address
     """
     async with session_factory.async_get_session() as session:
-        res = await session.execute(Select(Phone).filter(Phone.ip_address == ip_address))
-    return res.scalars().first()
+        select_phone = await session.execute(Select(Phone.ip_address).filter(Phone.ip_address == ip_address))
+    return select_phone.scalars().first()
 
 
 async def create_phone(ip_address: str) -> None:
@@ -113,9 +113,9 @@ async def get_phones() -> list[str]:
     :return: list of phones which status not "SUCCESS"
     """
     filters = [Phone.status != "SUCCESS", Phone.status.is_(None)]
-    async with session_factory.async_get_session() as session, session.begin():
-        res = await session.execute(Select(Phone.ip_address).filter(or_(*filters)))
-    return res.scalars().all()
+    async with session_factory.async_get_session() as session:
+        select_phones = await session.execute(Select(Phone.ip_address).filter(or_(*filters)))
+    return select_phones.scalars().all()
 
 
 async def get_phone_after_complete(
@@ -127,24 +127,22 @@ async def get_phone_after_complete(
     :return:  dict with SUCCESS and ERROR phones list
     """
 
-    res = {}
-
-    res["Success"] = await _get_phones(
-        Select(Phone.ip_address).filter(and_(Phone.status == "SUCCESS", Phone.ip_address.in_(phones)))
-    )
-
-    res["Error"] = await _get_phones(
-        Select(Phone.ip_address).filter(and_(Phone.status != "SUCCESS", Phone.ip_address.in_(phones)))
-    )
-
-    res["Devices"] = len(res["Success"] + res["Error"])
-    return res
+    result_dict = {
+        "Success": await _get_phones(
+            Select(Phone.ip_address).filter(and_(Phone.status == "SUCCESS", Phone.ip_address.in_(phones))),
+        ),
+        "Error": await _get_phones(
+            Select(Phone.ip_address).filter(and_(Phone.status != "SUCCESS", Phone.ip_address.in_(phones))),
+        ),
+    }
+    result_dict["Devices"] = len(result_dict["Success"] + result_dict["Error"])
+    return result_dict
 
 
 async def _get_phones(select_query: Select[tuple[Any, ...]]) -> list[str]:
     async with session_factory.async_get_session() as session:
-        res = await session.execute(select_query)
-    return res.scalars().all()
+        stmt = await session.execute(select_query)
+    return stmt.scalars().all()
 
 
 async def send_keypress(session: ClientSession, ip: str, keynavi_config: list[str]) -> dict[str, Any]:
@@ -232,15 +230,15 @@ async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
     :return:  return count of updated rows
     """
     async with session_factory.async_get_session() as session, session.begin():
-        res = await session.execute(
+        update_query = await session.execute(
             Update(Phone)
             .filter(Phone.ip_address == ip)
-            .values(status=status, updated=datetime.datetime.now(), error=error)
+            .values(status=status, updated=datetime.datetime.now(), error=error),
         )
-    return res.rowcount
+    return update_query.rowcount
 
 
 async def clear_table() -> int:
     async with session_factory.async_get_session() as session, session.begin():
-        res = await session.execute(Delete(Phone))
-    return res.rowcount
+        delete_query = await session.execute(Delete(Phone))
+    return delete_query.rowcount

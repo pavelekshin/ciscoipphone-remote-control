@@ -2,15 +2,16 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_engine_from_config,
     async_sessionmaker,
 )
 
-from models.model_base import ModelBase
+from models.model import ModelBase
 from settings import cfg
 
-__factory: AsyncSession = None
+__factory: AsyncEngine = None
 
 
 async def db_init():
@@ -29,7 +30,7 @@ async def db_init():
     else:
         print(f"\nSuccessfully connected to DB: {engine.url}")
 
-    __factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    __factory = async_sessionmaker(engine)
 
 
 @asynccontextmanager

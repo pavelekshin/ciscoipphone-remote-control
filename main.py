@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-import service
+from service import service
 
 
 async def run():
