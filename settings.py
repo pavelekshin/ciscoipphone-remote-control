@@ -1,9 +1,15 @@
+from dynaconf import Dynaconf
+
 from config.config import Config, PostgresSQL
 
-USER: str = "phonecontrol"  # CUCM End User username
-USER_PWD: str = "phonecontrol"  # CUCM End User password
-PAUSE: float = 1.5  # Pause in seconds between sending keypress
-CHUNK_SIZE: int = 20  # Chunk size which split phones list (use for more control)
+settings = Dynaconf(
+    envvar_prefix="ENV",
+    load_dotenv=True,
+)
 
-# default postgresql docker settings
-cfg: Config = PostgresSQL(host="localhost", dbname="postgres", username="postgres", password="postgres")
+cfg: Config = PostgresSQL(
+    host=settings.DB_HOST,
+    dbname=settings.DB_NAME,
+    username=settings.DB_USERNAME,
+    password=settings.DB_PASSWORD,
+)

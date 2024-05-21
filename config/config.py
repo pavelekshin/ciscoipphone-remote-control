@@ -65,7 +65,7 @@ class PostgresSQL(Config):
     DB_PASSWORD: str = "postgres"
     DB_NAME: str = "postgres"
     PORT: int = 5432
-    ECHO: bool = True
+    ECHO: bool = False
     ENGINE_OPTIONS: dict[str, Any] = {
         "pool_size": 10,
         "pool_pre_ping": True,

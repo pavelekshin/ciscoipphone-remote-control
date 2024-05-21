@@ -44,6 +44,7 @@ class Phone(ModelBase):
 
     def __repr__(self) -> str:
         return (
-            f"Phone(id={self.id!r}, ip_address={self.ip_address!r}, status={self.status!r}, error={self.error!r}, "
+            f"Phone(id={self.id!r}, ip_address={self.ip_address!r},"
+            f" status={self.status!r}, error={self.error!r}, "
             f"created={self.created!r}, updated={self.updated!r})"
         )
