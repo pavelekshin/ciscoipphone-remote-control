@@ -6,7 +6,8 @@ This app used for remotely delete ITL/CTL certificates and restarts the Cisco IP
 
 phones.csv - list of phones ip address <br>
 templates/keypress_templates.yaml - phone templates with keypress <br>
-settings.py - global settings <br>
+.env - settings <br>
+config/config.py - db config factory
 
 # Requrements:
 On CUCM cluster activate Cisco CTIManager services, it's required for remote control.
