@@ -199,7 +199,7 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
     async with ClientSession(timeout=session_timeout) as session:
         for number, chunk in enumerate(chunked(phones, settings.CHUNK_SIZE), start=1):
             pending = [
-                asyncio.create_task(send_keypress(session, ip, keynavi_config), name=f"Task-{ip}")
+                asyncio.create_task(send_keypress(session, ip, keynavi_config), name=f"Task-{ip}")  # noqa
                 for ip in chunk
             ]
             print(f"Chunk: {number}, contains ip address: {chunk}")

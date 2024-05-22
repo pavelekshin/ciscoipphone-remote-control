@@ -48,7 +48,7 @@ select = [
     "COM",
 ]
 
-ignore = []
+ignore = ["COM812"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
