@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from models.model import ModelBase
-from settings import cfg
+from settings import db_settings
 
 __factory: AsyncEngine = None
 
@@ -18,7 +18,7 @@ async def db_init():
     global __factory
 
     engine = async_engine_from_config(
-        cfg.config,
+        db_settings.config,
     )
 
     try:
