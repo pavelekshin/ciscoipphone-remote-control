@@ -21,7 +21,7 @@ async def run():
     total = end - start
     print("=" * 80)
     print(
-        f"Template {template} action on {len(phones)} phones is completed! Runtime {total:.4f} sec"  # noqa
+        f"Template {template} action on {len(phones)} phones is completed! Runtime {total:.4f} sec"
     )
     print(f"Results: {await service.get_phone_after_complete(phones)}")
     print("Check phones table on database for more information!")

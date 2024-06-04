@@ -188,9 +188,7 @@ async def tasks_action(done: Iterable[Task]) -> None:
     :param done:  Iterable[Task]
     """
     for task in done:
-        ip_addr = task.get_name().removeprefix(
-            "Task-"
-        )  # substring ip address from task name #noqa
+        ip_addr = task.get_name().removeprefix("Task-")  # substring ip address from task name
         if task.exception() is None:
             task_result: dict = task.result()
             if (
