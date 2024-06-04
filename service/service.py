@@ -8,13 +8,13 @@ from typing import Any, Generator, Iterable
 
 import progressbar as pb
 import yaml
-from aiohttp import BasicAuth, ClientSession, ClientTimeout
 from lxml import etree
 from more_itertools import chunked
 from sqlalchemy import Delete, Select, Update
 
 from data import session_factory
 from models.model import Phone, StatusEnum
+from service.client import Client
 from settings import settings
 
 
@@ -93,8 +93,7 @@ async def find_phone(ip_address: str) -> str | None:
     """
     async with session_factory.async_get_session() as session:
         select_phone = await session.execute(
-            Select(Phone.ip_address).
-            filter(Phone.ip_address == ip_address)
+            Select(Phone.ip_address).filter(Phone.ip_address == ip_address)
         )
     return select_phone.scalars().first()
 
@@ -124,7 +123,7 @@ async def get_phones() -> list[str]:
 
 
 async def get_phone_after_complete(
-        phones: list[str],
+    phones: list[str],
 ) -> dict[str, list[str] | int] | None:
     """
     Get results from DB
@@ -134,12 +133,14 @@ async def get_phone_after_complete(
 
     result_dict = {
         "Success": await _get_phones(
-            Select(Phone.ip_address).
-            filter(and_(Phone.status == "SUCCESS", Phone.ip_address.in_(phones))),
+            Select(Phone.ip_address).filter(
+                and_(Phone.status == "SUCCESS", Phone.ip_address.in_(phones))
+            ),
         ),
         "Error": await _get_phones(
-            Select(Phone.ip_address).
-            filter(and_(Phone.status != "SUCCESS", Phone.ip_address.in_(phones))),
+            Select(Phone.ip_address).filter(
+                and_(Phone.status != "SUCCESS", Phone.ip_address.in_(phones))
+            ),
         ),
     }
     result_dict["Devices"] = len(result_dict["Success"] + result_dict["Error"])
@@ -152,41 +153,6 @@ async def _get_phones(select_query: Select[tuple[Any, ...]]) -> list[str]:
     return stmt.scalars().all()
 
 
-async def send_keypress(
-        session: ClientSession,
-        ip: str,
-        keynavi_config: list[str],
-) -> dict[str, Any]:
-    """
-    Send keypress to phone
-    :param session: asyncio.ClientSession
-    :param ip: phone ip address for connection
-    :param keynavi_config: key navigation list sending to phone
-    :return: dict with ip address and response code
-    """
-    url = f"http://{ip}/CGI/Execute"
-    headers = {"Content-Type": "text/xml;charset=utf-8"}  # application/xml
-
-    responses = []
-
-    for xml in keynavi_config:
-        async with session.post(
-                url,
-                auth=BasicAuth(
-                    settings.USER,
-                    settings.USER_PWD,
-                ),
-                headers=headers,
-                data={"XML": xml},
-        ) as resp:
-            responses.append(resp.status)
-        await asyncio.sleep(settings.PAUSE)
-    return {
-        "ip": ip,
-        "response": 200 if all(i <= 400 for i in responses) else responses[-1],
-    }
-
-
 async def create_async_client_session(phones: list[str], keynavi_config: list[str]):
     """
     Create async ClientSession and run send keypress
@@ -194,22 +160,26 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
     :param keynavi_config: list of key navigation for loaded phones
     """
     print("Passed phones: ", phones)
-
-    session_timeout = ClientTimeout(sock_read=3, sock_connect=3, connect=3)
-    async with ClientSession(timeout=session_timeout) as session:
-        for number, chunk in enumerate(chunked(phones, settings.CHUNK_SIZE), start=1):
-            pending = [
-                asyncio.create_task(send_keypress(session, ip, keynavi_config), name=f"Task-{ip}")  # noqa
-                for ip in chunk
-            ]
-            print(f"Chunk: {number}, contains ip address: {chunk}")
-            with pb.ProgressBar(max_value=len(chunk), term_width=120, max_error=False) as bar:  # noqa
-                complete = 0
-                while pending:
-                    done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)  # noqa
-                    complete += len(done)
-                    bar.update(complete)
-                    await asyncio.create_task(tasks_action(done))
+    client = Client()
+    for number, chunk in enumerate(chunked(phones, settings.CHUNK_SIZE), start=1):
+        pending = [
+            asyncio.create_task(
+                client.send_keypress(ip, keynavi_config), name=f"Task-{ip}"
+            )
+            for ip in chunk
+        ]
+        print(f"Chunk: {number}, contains ip address: {chunk}")
+        with pb.ProgressBar(
+            max_value=len(chunk), term_width=120, max_error=False
+        ) as bar:
+            complete = 0
+            while pending:
+                done, pending = await asyncio.wait(
+                    pending, return_when=asyncio.FIRST_COMPLETED
+                )
+                complete += len(done)
+                bar.update(complete)
+                await asyncio.create_task(tasks_action(done))
 
 
 async def tasks_action(done: Iterable[Task]) -> None:
@@ -218,10 +188,14 @@ async def tasks_action(done: Iterable[Task]) -> None:
     :param done:  Iterable[Task]
     """
     for task in done:
-        ip_addr = task.get_name().removeprefix("Task-")  # substring ip address from task name #noqa
+        ip_addr = task.get_name().removeprefix(
+            "Task-"
+        )  # substring ip address from task name #noqa
         if task.exception() is None:
             task_result: dict = task.result()
-            if task_result.get("response") <= 400:  # If response code below 400, we mark this result as SUCCESS #noqa
+            if (
+                task_result.get("response") <= 400
+            ):  # If response code below 400, we mark this result as SUCCESS #noqa
                 await update_phones(
                     ip=ip_addr,
                     status=StatusEnum.SUCCESS,
