@@ -1,4 +1,3 @@
-aiohttp==3.9.5
 dynaconf==3.2.5
 SQLAlchemy==2.0.27
 PyYAML==6.0.1
