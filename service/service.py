@@ -180,7 +180,7 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
                 complete += len(done)
                 bar.update(complete)
 
-                task = asyncio.create_task(tasks_action(done))
+                bg_task = asyncio.create_task(tasks_action(done))
                 await asyncio.sleep(0)
 
 
