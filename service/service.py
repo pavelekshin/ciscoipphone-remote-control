@@ -123,7 +123,7 @@ async def get_phones() -> list[str]:
 
 
 async def get_phone_after_complete(
-        phones: list[str],
+    phones: list[str],
 ) -> dict[str, list[str] | int] | None:
     """
     Get results from DB
@@ -170,7 +170,7 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
         ]
         print(f"Chunk: {number}, contains ip address: {chunk}")
         with pb.ProgressBar(
-                max_value=len(chunk), term_width=120, max_error=False
+            max_value=len(chunk), term_width=120, max_error=False
         ) as bar:
             complete = 0
             while pending:
@@ -180,7 +180,7 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
                 complete += len(done)
                 bar.update(complete)
 
-                bg_task = asyncio.create_task(tasks_action(done))
+                _bg_task = asyncio.create_task(tasks_action(done))
                 await asyncio.sleep(0)
 
 
