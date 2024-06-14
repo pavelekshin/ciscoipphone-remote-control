@@ -3,7 +3,7 @@ from dynaconf import Dynaconf
 from config.config import PostgresSQL
 
 settings = Dynaconf(
-    envvar_prefix="ENV",
+    envvar_prefix=False,
     load_dotenv=True,
 )
 
