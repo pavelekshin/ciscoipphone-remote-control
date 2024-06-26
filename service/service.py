@@ -4,7 +4,7 @@ import datetime
 import ipaddress
 from asyncio import Task
 from operator import and_, or_
-from typing import Any, Generator, Iterable
+from typing import Any, Generator
 
 import progressbar as pb
 import yaml
@@ -16,6 +16,8 @@ from data import session_factory
 from models.model import Phone, StatusEnum
 from service.client import Client
 from settings import settings
+
+background_tasks = set()
 
 
 def create_template(template: list[str]):
@@ -179,31 +181,33 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
                 )
                 complete += len(done)
                 bar.update(complete)
+                for task in done:
+                    bg_task = asyncio.create_task(tasks_action(task))
+                    background_tasks.add(bg_task)  # noqa: E501, keep reference for 'fire-and-forget' background tasks
+                    bg_task.add_done_callback(background_tasks.remove)
 
-                _bg_task = asyncio.create_task(tasks_action(done))
-                await asyncio.sleep(0)
 
-
-async def tasks_action(done: Iterable[Task]) -> None:
+async def tasks_action(task: Task) -> None:
     """
     Get complete task and run according DB query
-    :param done:  Iterable[Task]
+    :param task:  Task
     """
-    for task in done:
-        ip_addr = task.get_name().removeprefix("Task-")  # substring ip address from task name
-        if task.exception() is None:
-            task_result: dict = task.result()
-            await update_phones(
-                ip=ip_addr,
-                status=StatusEnum.SUCCESS if (task_result.get("response") <= 400) else StatusEnum.ERROR,
-                error=f"Response {task_result.get('response')}",
-            )
-        else:  # If task complete with exception we mark this result as ERROR and write ERROR message in DB #noqa
-            await update_phones(
-                ip=ip_addr,
-                status=StatusEnum.ERROR,
-                error=str(task.exception()),
-            )
+    ip_addr = task.get_name().removeprefix("Task-")  # noqa: E501, substring ip address from task name
+    if task.exception() is None:
+        task_result: dict = task.result()
+        await update_phones(
+            ip=ip_addr,
+            status=StatusEnum.SUCCESS
+            if (task_result.get("response") <= 400)
+            else StatusEnum.ERROR,
+            error=f"Response {task_result.get('response')}",
+        )
+    else:  # noqa: E501, If task complete with exception we mark this result as ERROR and write ERROR message in DB
+        await update_phones(
+            ip=ip_addr,
+            status=StatusEnum.ERROR,
+            error=str(task.exception()),
+        )
 
 
 async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:

@@ -50,7 +50,8 @@ select = [
 
 ignore = [
     "E501",
-    "COM812"
+    "COM812",
+    "E501",
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

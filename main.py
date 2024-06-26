@@ -14,14 +14,15 @@ async def run():
     print("Starting with " + template)
     commands = config_dict[template]
     keynavi_config = service.create_template(commands)
-    start = time.time()
+    start = time.perf_counter()
     phones = await service.get_phones()  # get all new and not successful phone result
     await service.create_async_client_session(phones, keynavi_config)
-    end = time.time()
+    await asyncio.wait(service.background_tasks)
+    end = time.perf_counter()
     total = end - start
     print("=" * 80)
     print(
-        f"Template {template} action on {len(phones)} phones is completed! Runtime {total:.4f} sec"
+        f"Template {template} action on {len(phones)} phones is completed! Runtime {total:.3f} sec"
     )
     print(f"Results: {await service.get_phone_after_complete(phones)}")
     print("Check phones table on database for more information!")
