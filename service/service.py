@@ -150,10 +150,6 @@ async def get_phone_after_complete(
 
 
 async def _get_phones(select_query: Select[tuple[Any, ...]]) -> list[str]:
-    """
-    Run select query
-    :param select_query - query statement
-    """
     async with session_factory.async_get_session() as session:
         stmt = await session.execute(select_query)
     return stmt.scalars().all()
@@ -232,9 +228,6 @@ async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
 
 
 async def clear_table() -> int:
-    """
-    Clear phone table
-    """
     async with session_factory.async_get_session() as session, session.begin():
         delete_query = await session.execute(Delete(Phone))
     return delete_query.rowcount

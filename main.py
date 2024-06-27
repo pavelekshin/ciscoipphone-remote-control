@@ -5,9 +5,6 @@ from service import service
 
 
 async def run():
-    """
-    Main program
-    """
     await input_clear_action()
     await insert_phones()
 
@@ -32,27 +29,20 @@ async def run():
 
 
 async def input_clear_action():
-    """
-    Choice phone table clear action
-    """
     cnt: int = 0
     try:
         clear = input(
             "\nClear destination phones table before insert?\nPress [Y] or any: "
         )
+        if clear.lower() == "y":
+            cnt = await service.clear_table()
     except ValueError:
         print("Oops, wrong choice!")
     else:
-        if clear.lower() == "y":
-            cnt = await service.clear_table()
-    print(f"Cleared records : {cnt}\n")
+        print(f"Cleared records : {cnt}\n")
 
 
 def input_phone_template(*, config: dict[str, list[str]] = None) -> str:
-    """
-    Choice phone template
-    :param config - keypress template (keypress_templates.yaml)
-    """
     for indx, template in enumerate(list(config.keys()), start=1):
         print(f"{indx}. {template}")
 
@@ -66,9 +56,6 @@ def input_phone_template(*, config: dict[str, list[str]] = None) -> str:
 
 
 async def insert_phones():
-    """
-    Insert phones into DB phone table
-    """
     cnt = 0
     for phone in service.read_phones("phones.csv"):
         cnt += await service.insert_phones(phone)
