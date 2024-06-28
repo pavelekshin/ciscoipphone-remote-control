@@ -179,7 +179,7 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
             max_value=len(chunk), term_width=120, max_error=False
         ) as bar:
             complete = 0
-            while pending:
+            while pending:  # continue while we have pending tasks
                 done, pending = await asyncio.wait(
                     pending, return_when=asyncio.FIRST_COMPLETED
                 )
