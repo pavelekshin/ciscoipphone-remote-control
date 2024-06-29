@@ -9,7 +9,6 @@ from typing import Any, Generator
 import progressbar as pb
 import yaml
 from lxml import etree
-from more_itertools import chunked
 from sqlalchemy import Delete, Select, Update
 
 from data import session_factory
@@ -167,28 +166,25 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
     """
     print("Passed phones: ", phones)
     client = Client()
-    for number, chunk in enumerate(chunked(phones, settings.CHUNK_SIZE), start=1):
-        pending = [
-            asyncio.create_task(
-                client.send_keypress(ip, keynavi_config), name=f"Task-{ip}"
+    semaphore = asyncio.Semaphore(settings.MAX_CONNECTION)
+    pending = [
+        asyncio.create_task(
+            client.send_keypress(ip, keynavi_config, semaphore), name=f"Task-{ip}"
+        )
+        for ip in phones
+    ]
+    with pb.ProgressBar(max_value=len(phones), term_width=120, max_error=False) as bar:
+        complete = 0
+        while pending:  # continue while we have pending tasks
+            done, pending = await asyncio.wait(
+                pending, return_when=asyncio.FIRST_COMPLETED
             )
-            for ip in chunk
-        ]
-        print(f"Chunk: {number}, contains ip address: {chunk}")
-        with pb.ProgressBar(
-            max_value=len(chunk), term_width=120, max_error=False
-        ) as bar:
-            complete = 0
-            while pending:  # continue while we have pending tasks
-                done, pending = await asyncio.wait(
-                    pending, return_when=asyncio.FIRST_COMPLETED
-                )
-                complete += len(done)
-                bar.update(complete)
-                for task in done:
-                    bg_task = asyncio.create_task(task_action(task))
-                    background_tasks.add(bg_task)  # noqa: E501, keep reference for 'fire-and-forget' background tasks
-                    bg_task.add_done_callback(background_tasks.remove)
+            complete += len(done)
+            bar.update(complete)
+            for task in done:
+                bg_task = asyncio.create_task(task_action(task))
+                background_tasks.add(bg_task)  # noqa: E501, keep reference for 'fire-and-forget' background tasks
+                bg_task.add_done_callback(background_tasks.remove)
 
 
 async def task_action(task: Task) -> None:
