@@ -8,6 +8,37 @@ database.
 
 [Cisco IP Phone Programmobility Guide](https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cuipph/all_models/xsi/9-1-1/CUIP_BK_P82B3B16_00_phones-services-application-development-notes.html)
 
+
+```shell
+.
+├── README.md
+├── config
+│   └── config.py
+├── data
+│   └── session_factory.py
+├── db
+│   ├── db_folder.py
+│   └── phonedb.sqlite
+├── models
+│   └── model.py
+├── service
+│   ├── __init__.py
+│   ├── client.py
+│   └── service.py
+├── settings.py
+├── templates
+│   └── keypress_templates.yaml
+├── utils.py
+├── phones.csv
+├── requirements.txt
+├── ruff.toml
+├── .env
+└── main.py
+```
+
+
+
+
 phones.csv - list of phones ip address <br>
 templates/keypress_templates.yaml - phone templates with keypress <br>
 .env.example - settings <br>
