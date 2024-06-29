@@ -199,7 +199,7 @@ async def task_action(task: Task) -> None:
     ip_addr = task.get_name().removeprefix("Task-")  # noqa: E501, substring ip address from task name
     if task.exception() is None:
         task_result: dict = task.result()
-        await update_phones(
+        await update_phone(
             ip=ip_addr,
             status=StatusEnum.SUCCESS
             if (task_result.get("response") <= 400)
@@ -207,14 +207,14 @@ async def task_action(task: Task) -> None:
             error=f"Response {task_result.get('response')}",
         )
     else:  # noqa: E501, If task complete with exception we mark this result as ERROR and write ERROR message in DB
-        await update_phones(
+        await update_phone(
             ip=ip_addr,
             status=StatusEnum.ERROR,
             error=str(task.exception()),
         )
 
 
-async def update_phones(ip: str, status: StatusEnum, error: str = None) -> int:
+async def update_phone(ip: str, status: StatusEnum, error: str = None) -> int:
     """
     Update phone status in DB
     :param ip:  phone ip
