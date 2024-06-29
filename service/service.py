@@ -186,12 +186,12 @@ async def create_async_client_session(phones: list[str], keynavi_config: list[st
                 complete += len(done)
                 bar.update(complete)
                 for task in done:
-                    bg_task = asyncio.create_task(tasks_action(task))
+                    bg_task = asyncio.create_task(task_action(task))
                     background_tasks.add(bg_task)  # noqa: E501, keep reference for 'fire-and-forget' background tasks
                     bg_task.add_done_callback(background_tasks.remove)
 
 
-async def tasks_action(task: Task) -> None:
+async def task_action(task: Task) -> None:
     """
     Get complete task and run according DB query
     :param task:  Task
