@@ -36,9 +36,6 @@ database.
 └── main.py
 ```
 
-
-
-
 phones.csv - list of phones ip address <br>
 templates/keypress_templates.yaml - phone templates with keypress <br>
 .env.example - settings <br>
